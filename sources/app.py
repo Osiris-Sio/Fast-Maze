@@ -16,358 +16,413 @@ licence CC BY SA
 import pyxel, random, time
 
 ######################################################
-### Classe Personnage :
+### Classe Graphe (non orienté avec des dictionnaires) :
 ######################################################
 
-class Personnage() :
-    
+class Graphe_non_oriente_dic() :
+    '''
+    une classe pour un graphe non orienté avec une matrice adjacente
+    '''
     def __init__(self):
-        #Position :
-        self.x = 160
-        self.y = 37
-        #Apparence :
-        self.apparence = 0
+        '''
+        construit le graphe avec pour seul attribut un dictionnaire vide
+        '''
+        self.adj = {}
+
+    def ajouter_sommet(self, sommet):
+        '''
+        ajoute un nouveau sommet au graphe
+        : param sommet (???)
+        : pas de return, EFFET DE BORD sur self
+        '''
+        if sommet not in self.adj :
+            self.adj[sommet] = []
+            
+    def ajouter_arete(self, sommet1, sommet2) :
+        '''
+        on ajoute un sommet s'il n'y est pas dans le dictionnaire puis ajoute le sommet2
+        : param sommet1, sommet2 (???), deux sommets différents
+        : return (boolean)
+        '''
+        assert sommet1 != sommet2, 'Les deux sommets doivent être différents !'
+        self.ajouter_sommet(sommet1)
+        self.ajouter_sommet(sommet2)
+        if sommet2 not in self.adj[sommet1] :
+            self.adj[sommet1].append(sommet2)
+        if sommet1 not in self.adj[sommet2] :
+            self.adj[sommet2].append(sommet1)
+            
+    def a_arete(self, sommet1, sommet2) :
+        '''
+        renvoie True si il y a un arête de sommet1 vers sommet2 et False sinon
+        : param sommet1, sommet2 (???) deux sommets différents
+        : return (boolean)
+        >>> g = Graphe_non_oriente_dic()
+        >>> g.ajouter_sommet('A')
+        >>> g.ajouter_arete('B', 'C')
+        >>> g.a_arete('B', 'C')
+        True
+        >>> g.a_arete('A', 'B')
+        False
+        '''
+        assert sommet1 in self.adj, 'ce sommet n\'existe pas dans le dictionnaire adj !'
+        return sommet2 in self.adj[sommet1]
+            
+    def voisins(self, sommet):
+        '''
+        renvoie un tableau des voisins du sommet
+        : param sommet (int) entre 0 et  n - 1
+        : return (list)
+        '''
+        assert sommet in self.adj, 'ce sommet n\'existe pas dans le dictionnaire adj !'
+        return self.adj[sommet]
+
+######################################################
+### Classe Maillon :
+######################################################
+
+class Maillon :
+    '''
+    Une classe pour un maillon.
+    '''
+    
+    def __init__(self, valeur = None, suivant = None):
+        '''
+        Initialise un maillon avec les attributs :
+            -> valeur (type inconnu), la valeur du maillon
+            -> suivant (Maillon), pointe vers son Maillon suivant (None si le Maillon suivant est vide).
+        : params
+            valeur (type inconnu)
+            suivant (Maillon)
+        '''
+        self.valeur = valeur
+        self.suivant = suivant
+    
+    def acc_valeur(self):
+        '''
+        Accesseur de l'attribut valeur.
+        : return (type inconnu), valeur
+        '''
+        return self.valeur
+    
+    def acc_suivant(self):
+        '''
+        Accesseur de l'attribut suivant.
+        : return (Maillon)
+        '''
+        return self.suivant
+    
+    def mut_valeur(self, nouvelle_valeur):
+        '''
+        Modifie l'attribut valeur.
+        : param nouvelle_valeur (type inconnu)
+        '''
+        self.valeur = nouvelle_valeur
         
-    ###Accesseur :
-    
-    def acc_x(self):
-        return self.x
-    
-    def acc_y(self):
-        return self.y
-    
-    def acc_apparence(self):
-        return self.apparence
-    
-    ###Changement apparence :
-    
-    def changement_apparence(self, valeur) :
-        self.apparence += valeur
-    
-    ###Placement :
-    
-    def placer_menu(self):
-        self.x = 160
-        self.y = 37
+    def mut_suivant(self, maillon):
+        '''
+        Modifie l'attribut suivant.
+        : param maillon (Maillon)
+        '''
+        self.suivant = maillon
         
-    def placer_partie(self):
-        self.x = 96
-        self.y = 20
+    def est_vide(self) :
+        '''
+        Renvoie True si le maillon est vide, False sinon
+        '''
+        return self.valeur == None #Renvoie la réponse de la condition (True/False)
+
+######################################################
+### Classe Pile :
+######################################################
+
+class Pile() :
+    '''
+    Une classe pour implémenter une pile.
+    '''
+    def __init__(self):
+        '''
+        Initialise une pile vide avec l'attribut sommet (Maillon)
+        qui est le sommet de la pile (par défaut, il n'y a pas de sommet).
+        : pas de return, on initialise.
+        '''
+        self.sommet = None
+
+    def est_vide(self):
+        '''
+        Renvoie True si la pile est vide et False sinon.
+        : return (boolean)
         
-    ###Mouvements :
-    
-    def gauche(self, vitesse = 1):
-        self.x -= vitesse
+        >>> p = Pile()
+        >>> p.est_vide()
+        True
+        >>> p.empiler(1)
+        >>> p.est_vide()
+        False
+        '''
+        return self.sommet == None
+
+    def empiler(self, valeur):
+        '''
+        Ajoute la valeur passé en paramètre au sommet de la pile.
+        : param valeur (type inconnu)
+        : pas de return
+        '''
+        self.sommet = Maillon(valeur, self.sommet)
+
+    def depiler(self):
+        '''
+        Enlève si possible la valeur au sommet de pile et la renvoie ou déclenche un message d'erreur si la pile est vide.
+        : return (type inconnu)
         
-    def droite(self, vitesse = 1):
-        self.x += vitesse
-        
-    def haut(self, vitesse = 1):
-        self.y -= vitesse
-        
-    def bas(self, vitesse = 1):
-        self.y += vitesse
-        
-    ###Affichage :
-    
-    def afficher(self):
-        pyxel.blt(self.x, self.y, 1, 0, 8 * self.apparence, 8, 8, 0)
-   
+        >>> p = Pile()
+        >>> p.empiler(1)
+        >>> p.empiler(2)
+        >>> p.empiler('a')
+        >>> p.depiler()
+        'a'
+        >>> p.depiler()
+        2
+        '''
+        #Précondition :
+        assert not self.est_vide(),'La pile est vide !'
+        #Code :
+        valeur = self.sommet.acc_valeur()
+        self.sommet = self.sommet.acc_suivant()
+        return valeur
+
 ######################################################
 ### Classe Labyrinthe :
 ######################################################
         
 class Labyrinthe() :
     
-    ##############################################################################
-    ### Fonctions de la classe :
-    ##############################################################################
-        
-    def lire(nom_fichier): 
-        '''
-        Auteur : Christophe Mieszczak
-        Lit le fichier (.txt) passé en paramètre et renvoie son contenu.
-        Ce n'est pas une méthode mais une fonction de la classe !
-        : param nom_fichier (str)
-        return (list), un tableau avec chaque élément, une ligne du fichier (.txt).
-        '''
-        #Précondition :
-        assert isinstance(nom_fichier, str), 'nom_fichier doit être une chaîne !'
-        #Code :
-        try :
-            # ouvre un canal en lecture vers text.txt :
-            lecture = open(nom_fichier, 'r',encoding = 'utf_8') 
-        except FileNotFoundError :
-            raise # renvoie une erreur si le fichier n'existe pas
-        # stocke toutes les lignes du fichier dans la liste toutes_les_lignes :
-        toutes_les_lignes = lecture.readlines() 
-        lecture.close()
-        return toutes_les_lignes
+    ######################################################
+    ### Fonctions de Création :
+    ######################################################
     
-    def generer_laby(toutes_les_lignes) :
+    def modeliser_laby(largeur, hauteur) :
         '''
-        Auteur : CAPPONI DELY Arthur
-        Renvoie une liste de listes modélisant le labyrinthe.
-        Ce n'est pas une méthode mais une fonction de la classe !
-        : param toutes_les_lignes (list), un tableau avec chaque élément, une ligne du fichier (.txt) lu par la méthode lire(nom_fichier).
-        : return (list), un tableau contenant des chaines de caractères qui correspondent à une ligne du fichier (.txt).
-        
-        >>> toutes_les_lignes = Labyrinthe.lire('lab1.txt')
-        >>> Labyrinthe.generer_laby(toutes_les_lignes)
-        [['#', '#', '#', '#', '#', '#', '#'], ['#', 'X', '#', ' ', ' ', ' ', 'S'], ['#', ' ', '#', ' ', '#', '#', '#'], ['#', ' ', '#', ' ', ' ', ' ', '#'], ['#', ' ', '#', '#', '#', ' ', '#'], ['#', ' ', ' ', ' ', ' ', ' ', '#'], ['#', '#', '#', '#', '#', '#', '#']]
+        renvoie un graphe non orienté modélisant un labyrinthe comportant largeur salles sur hauteurs salles
+        :param largeur, hauteur (int)
+        :return (Graphe_non_oriente_dic)
         '''
-        #Précondition :
-        assert isinstance(toutes_les_lignes, list), 'le paramètre doit être un tableau de tableaux.'
-        #Code :
-        lab = [] # Création d'un tableau.
-        for ligne in toutes_les_lignes : # Pour les lignes dans toutes les lignes du labyrinthe.
-            ligne_lab = [] # On créé un tableau de ligne. 
-            for carac in ligne : # Pour les caractères (str) dans la ligne.
-                if carac != '\n' : # Si str n'est pas égal au str '\n'(passer à la ligne du dessous).
-                    ligne_lab.append(carac) # On ajoute le str dans le tableau de ligne.
-            lab.append(ligne_lab) # On ajoute la ligne dans le tableau labyrinthe.
-        return lab # Renvoie le labyrinthe.
-    
-    ##############################################################################
-    ### Accesseurs :
-    ##############################################################################
-    
-    def acc_lab(self, x, y) :
-        '''
-        Auteur : CAPPONI DELY Arthur
-        Renvoie le contenu (`#` ou ' ' ou 'X' ou 'S') du labyrinthe aux coordonnées passé en paramètre.
-        : params 
-            x (int)
-            y (int)
-        : return (str)
-        
-        >>> l = Labyrinthe('lab1.txt')
-        >>> l.acc_lab(1, 4)
-        ' '
-        >>> l.acc_lab(2, 2)
-        '#'
-        '''
-        #Préconditions:
-        assert isinstance(x, int), 'x doit être un entier positif.'
-        assert isinstance(y, int), 'y doit être un entier positif.'
-        #Code :
-        return self.lab[y][x] # Renvoie l'élément contenu de la case aux coordonnées x, y.
+        graphe = Graphe_non_oriente_dic() #Créer un graphe non orienté avec un dictionnaire vide
+        y = 1 #La coordonnée y du sommet 
+        #Création de lignes (nombre de lignes -> hauteur)
+        for i in range(0, hauteur) :
+            x = 1 #La coordonnée x du sommet
+            #Création de sommet pour chaque ligne (nombre de sommet par ligne -> largeur)
+            for j in range(0, largeur) :
+                sommet = (x, y) #Premier sommet de coordonnées x et y
+                
+                if j  + 1 <= largeur - 1 :
+                    graphe.ajouter_arete(sommet, (x + 2, y)) #Ajoute une arete entre ce sommet et le sommet de coordonnées x + 2 et y
+                #Si on n'est pas dans la première ligne, alors on ajoute une arete entre le sommet de coordonnées x - 2 et y et le sommet de coordonnées x - 2 et y - 2               
+                if 0 <= i - 1 :
+                    graphe.ajouter_arete((x, y), (x, y - 2))
+                x += 2
+            y += 2
+        return graphe
 
-    def acc_position_joueur(self):
+    def parcours_laby(graphe, sommet) :
         '''
-        Auteur : AMEDRO Louis
-        Renvoie les coordonnées x et y du joueur dans le labyrinthe.
-        : return (tuple)
-        
-        >>> l = Labyrinthe('lab1.txt')
-        >>> l.acc_position_joueur()
-        (1, 1)
-        >>> l.mut_lab(1, 1, ' ')
-        >>> l.acc_position_joueur()
-        False
-        >>> l.mut_lab(1, 2, 'X')
-        >>> l.acc_position_joueur()
-        (1, 2)
+        renvoie un tuple composé d'une liste de sommets correspondants 
+        à un parcours en profondeur du graphe et d'un dictionnaire parent 
+        permettant de savoir de qui sont voisins les voisins.
+        : param graphe (Graphe_non_oriente_dic)
+        : return tuple (liste de sommets, dictionnaires de parent)
         '''
-        position_joueur = False #Définit la position du joueur en Faux (n'a pas de position)
-        y = -1 #Définit l'indice y en -1
-        while y < len(self.lab) - 1 and not position_joueur : #Tant que la recherche du joueur n'a pas dépassé chaque ligne du labyrinthe et que les coordonnées de joueur n'est pas définit (qu'il est en Faux), alors :
-            y += 1 #Augmente la recherche de la ligne de 1 (ligne à ligne du labyrinthe)
-            x = 0 #Défini x à 0.
-            while x <= len(self.lab[y]) - 1 and not position_joueur : #Tant que la recherche du joueur dans la ligne y n'est pas dépassé (pour chaque élément) et que les coordonnées du joueur n'est pas définit (qu'il est en Faux), alors :
-                if self.acc_lab(x, y) == 'X' : #Si l'élément de coordonnées (x, y) dans le labyrinthe est le caractère du joueur ('X') :
-                    position_joueur = (x, y) #La position devient un tuple comprenant les coordonnées du joueur (x, y)
-                x += 1 #Sinon, augmente x de 1.
-        return position_joueur #Renvoie la position du joueur (x, y)
+        sommet_visites = []
+        p = Pile()
+        parent = {}
+        p.empiler(sommet)
+        parent[sommet] = None
+        while not p.est_vide() :
+            sommet = p.depiler()
+            #on ajoute le sommet au sommet visités
+            sommet_visites.append(sommet)
+            #voisins = les voisins du sommet dans le graphe mélanger
+            voisins = graphe.voisins(sommet)
+            random.shuffle(voisins)
+            #pour chaque voisin des voisins du sommet:
+            for voisin in voisins :
+                #s'il n'est pas dans parent:
+                if voisin not in parent:
+                    #le parent du voisin est le sommet
+                    parent[voisin] = sommet
+                    #on empile le voisin dans p
+                    p.empiler(voisin)
+        return (sommet_visites, parent)
 
-    def acc_position_sortie(self):
+    def generer_tab(largeur, hauteur) :
         '''
-        Auteur : AMEDRO Louis
-        Renvoie les coordonnées x et y de la sortie dans le labyrinthe.
-        : return (tuple)
+        renvoie un tableau de tableaux représentant 
+        un labyrinthe de largeur salles sur hauteurs salles
+        :params
+            largeur (int)
+            hauteur (int)
+        :return (list)
+        '''
+        laby = [] # On crée un tableau labyrinthe
+        for lignes in range(hauteur * 2 + 1): # Pour les lignes correspondants à la hauteur multiplier par 2 plus 1 :
+            ligne_laby = [1] * (largeur * 2 + 1) # La largeur d'une ligne du laby est la largeur passé en paramètre multiplier par 2 plus 1.
+            laby.append(ligne_laby) # On ajoute la ligne au labyrinthe.
+        for i in range(hauteur * 2 + 1): # Pour l'indice i qui correspond à la hauteur multiplier par 2 plus 1 :
+            if i % 2 != 0: # Si l'indice est impair est pas égale à 0 :
+                for j in range(largeur * 2 + 1): # Pour l'indice i qui correspond à la hauteur multiplier par 2 plus 1 :
+                    if j % 2 != 0: # Si l'indice est impair est pas égale à 0 :
+                        laby[i][j] = 0  # Remplace l'élément d'indice j du tableau d'indice i par 0.
+        return laby # renvoie le labyrinthe en tableau
         
-        >>> l = Labyrinthe('lab1.txt')
-        >>> l.acc_position_sortie()
-        (6, 1)
-        >>> l.mut_lab(6, 1, 'X')
-        >>> l.acc_position_sortie()
-        False
-        >>> l.mut_lab(5, 1, 'S')
-        >>> l.acc_position_sortie()
-        (5, 1)
+    def milieu(coord1, coord2):
         '''
-        position_sortie = False #Définit la position de la sortie en Faux (n'a pas de position)
-        y = -1 #Définit l'indice y en -1
-        while y < len(self.lab) - 1 and not position_sortie : #Tant que la recherche de la sortie n'a pas dépassé chaque ligne du labyrinthe et que les coordonnées de la sortie n'est pas définit (qu'il est en Faux), alors :
-            y += 1 #Augmente la recherche de la ligne de 1 (ligne à ligne du labyrinthe)
-            x = 0 #Défini x à 0.
-            while x <= len(self.lab[y]) - 1 and not position_sortie : #Tant que la recherche de la sortie dans la ligne y n'est pas dépassé (pour chaque élément) et que les coordonnées de la sortie n'est pas définit (qu'il est en Faux), alors :
-                if self.acc_lab(x, y) == 'S' : #Si l'élément de coordonnées (x, y) dans le labyrinthe est le caractère du joueur ('X') :
-                    position_sortie = (x, y) #La position devient un tuple comprenant les coordonnées de la sortie (x, y)
-                x += 1 #(Sinon) augmente x de 1.
-        return position_sortie #Renvoie la position de la sortie (x, y)
+        renvoie les coordonnées entières de la salle 
+        entre les salles de coordonnées précisées en paramètre
+        :params
+            coord1 (tuple)
+            coord2 (tuple)
+        :return (tuple)
+        '''
+        constat_coord = (coord2[0] - coord1[0], coord2[1] - coord1[1])
+        dic_constat_coord = {
+            (2, 0) : (coord2[0] - 1, coord2[1]),
+            (-2, 0) : (coord2[0] + 1, coord2[1]),
+            (0, 2) : (coord2[0], coord2[1] - 1),
+            (0, -2) : (coord2[0], coord2[1] + 1)
+        }
+        if constat_coord in dic_constat_coord :   
+            return dic_constat_coord[constat_coord]
+
+    def construire_tab_laby(largeur, hauteur) :
+        '''
+        renvoie le tableau de tableaux représentant 
+        un labyrinthe de largeur salles sur hauteurs 
+        salles, où les 1 représentent les murs et les 0 les salles.
+        :params
+            largeur (int)
+            hauteur (int)
+        :return (list)
+        '''
+        #Assertions :
+        assert isinstance(largeur, int), 'largeur doit être un entier (type int) !'
+        assert isinstance(hauteur, int), 'hauteur doit être un entier (type int) !'
+        #Code :
+        graphe_dic = Labyrinthe.modeliser_laby(largeur, hauteur) #construire le graphe qui modélise le labyrinthe.
+        parcours = Labyrinthe.parcours_laby(graphe_dic, (1, 1)) #obtenir le tableau du parcours en profondeur du graphe et le dictionnaire de parents des sommets.
+        tab = Labyrinthe.generer_tab(largeur, hauteur) #initialiser un tableau de tableaux représentant le labyrinthe non parcouru.
+        #ouvrir les murs du labyrinthe, en remplaçant les 0 par des 1 aux bons endroits dans le tableau de tableaux.
+        for i in range(len(parcours[0])) :
+            parent = parcours[1][parcours[0][i]]
+            if parent != None :
+                coordonnees = Labyrinthe.milieu(parcours[0][i], parent)
+                tab[coordonnees[1]][coordonnees[0]] = 0 #On va chercher dans tous les tableaux (hauteur) puis on remplace le 1 par un 0 dans le tableau correspondant (largeur)
+        return tab
     
-    ##############################################################################
+    ######################################################
+    ### Fonction d'Emplacement Personnage/Sortie :
+    ######################################################
+    
+    def placer(self, largeur, hauteur, sortie = False):
+        constat_perso = False
+        while not constat_perso :
+            coordonnees_personnage = (random.randint(0, largeur * 2), random.randint(0, hauteur * 2))
+            if self.laby[coordonnees_personnage[1]][coordonnees_personnage[0]] == 0:
+                constat_perso = True
+                if not sortie : 
+                    self.laby[coordonnees_personnage[1]][coordonnees_personnage[0]] = 'X'
+                else :
+                    self.laby[coordonnees_personnage[1]][coordonnees_personnage[0]] = 'S'
+        return coordonnees_personnage
+        
+    ######################################################
     ### Initialisation :
-    ##############################################################################
+    ######################################################
     
-    def __init__(self, nom_fichier):
-        '''
-        Auteur : AMEDRO Louis
-        Initialise le labyrinthe (objet) à partir du fichier (.txt) passé en paramètre.
-        Le labyrinthe a pour attributs :
-            -> lab, une liste de listes pour les coordonnées de chaque mur, joueur et sortie (x, y).
-            -> position_joueur, un tuple donnant les coordonnées du joueur 'X' (x, y).
-            -> position_sortie, un tuple donnant les coordonnées de la sortie 'S' (x, y).
-        : param nom_fichier (str)
-        : pas de return, on initialise.
-        '''
-        #Précondition :
-        assert isinstance(nom_fichier, str), 'Le paramètre doit être une chaine de caractère (str).'
-        #Code :
-        self.lab = Labyrinthe.generer_laby(Labyrinthe.lire(nom_fichier)) #Défini l'attribut lab qui sera une liste de listes généré grâce à nom_fichier passé en paramètre et aux fonctions de la classe (generer_laby et lire)
-        self.position_joueur = self.acc_position_joueur() #Défini l'attribut position_joueur qui sera un tuple (x, y) grâce à la méthode acc_position_joueur
-        self.position_sortie = self.acc_position_sortie() #Défini l'attribut position_sortie qui sera un tuple (x, y) grâce à la méthode acc_position_sortie
-        
-    ##############################################################################
-    ### __str__ et __repr__ :
-    ##############################################################################
-
-    def __str__(self) :
-        '''
-        Auteur : AMEDRO Louis
-        Renvoie une chaine pour afficher le labyrinthe, le joueur et la sortie également.
-        : return (str)
-        '''
-        chaine = '' #Définit une chaine de caractère qui contiendra toutes les lignes du labyrinthe à afficher.
-        for ligne in self.lab : #Pour chaque ligne du labyrinthe :
-            ligne_chaine = '' #Définit une chaine de caractères qui sera ajouté ensuite à chaine pour chaque ligne du labyrinthe. 
-            for carac in ligne : #Pour chaque element/caractère (str) dans la ligne du labyrinthe :
-                ligne_chaine += carac #Ajoute à ligne_chaine le caractère (str)
-            chaine = chaine + ligne_chaine + '\n' #A chaque ligne finit, on ajoute à chaine -> ligne_chaine et un retour à la ligne (\n)
-        return chaine #Renvoi le labyrinthe en affichage dans la console.
-    
-    def __repr__(self) :
-        '''
-        Auteur : CAPPONI DELY Arthur
-        Renvoie une chaine pour la description du labyrinthe.
-        : return (str)
-        '''
-        return ('Un labyrinthe comprenant un joueur (X) et une sortie (S).') # Renvoie la description du labyrinthe dans la console.
+    def __init__(self, largeur, hauteur, apparence_joueur):
+        self.laby = Labyrinthe.construire_tab_laby(largeur, hauteur)
+        self.apparence_joueur = apparence_joueur
+        self.position_joueur = self.placer(largeur, hauteur)
+        self.position_sortie = self.placer(largeur, hauteur, True)
     
     ##############################################################################
     ### Mutateurs :
     ##############################################################################
     
-    def mut_lab(self, x, y, carac) :
+    def mut_laby(self, x, y, carac) :
         '''
-        Auteur : AMEDRO Louis
         Modifie le labyrinthe en écrivant le caractère carac passé en paramètre aux 
         coordonnées x, y passé également en paramètre.
         : params
             x (int)
             y (int)
-            carac (str), de longueur 1
+            carac (???)
         : pas de return, modifie l'attribut lab
-        
-        >>> l = Labyrinthe('lab1.txt')
-        >>> l.acc_lab(1, 4)
-        ' '
-        >>> l.mut_lab(1, 4, '#')
-        >>> l.acc_lab(1, 4)
-        '#'
         '''
-        #Préconditions :
-        assert isinstance(x, int), 'x doit être un entier (int).'
-        assert isinstance(y, int), 'y doit être un entier (int).'
-        assert isinstance(carac, str) and len(carac) == 1, 'carac doit être une chaine de caractère (str) de longueur 1.'
-        #Code :
-        self.lab[y][x] = carac #Change à la liste d'indice y et d'élément d'indice x le caractère passé en paramètre.
+        self.laby[y][x] = carac #Change à la liste d'indice y et d'élément d'indice x le caractère passé en paramètre.
         
     ##############################################################################
     ### Méthodes :
     ##############################################################################
-        
-    def deplacer(self, direction):
-        '''
-        Auteur : AMEDRO Louis
-        Modifie les coordonnées du joueur 'X' dans la direction souhaitée si possible.
-        : param direction (str), 'z' ou 'q' ou 's' ou 'd'
-        : pas de return, on change l'attribut position_joueur.
-        
-        >>> l = Labyrinthe('lab1.txt')
-        >>> l.acc_position_joueur()
-        (1, 1)
-        >>> l.deplacer('s')
-        >>> l.acc_position_joueur()
-        (1, 2)
-        '''
-        #Précondition :
-        assert isinstance(direction, str) and direction in ['z', 'q', 's', 'd'], 'Le paramètre doit être une chaine de caractère (str).'
-        #Code :
-        if self.est_possible(direction) : #Si le déplacement vers la direction passé en paramètre est possible, alors :
-            self.mut_lab(self.position_joueur[0], self.position_joueur[1], ' ') #Change le caractère du labyrinthe aux coordonnées du joueur (x, y) en un chemin/caractère vide.
-            self.position_joueur = self.future_position(direction) #Change la position du joueur en sa nouvelle position dans la direction souhaité.
-            self.mut_lab(self.position_joueur[0], self.position_joueur[1], 'X') #Change le caractère du labyrinthe aux coordonnées du joueur (x, y) en 'X'.
-            
-    def est_gagne(self) :
-        '''
-        Auteur : CAPPONI DELY Arthur
-        Renvoie True si la partie est finie, False sinon.
-        : return (boolean)
-        
-        >>> l = Labyrinthe('lab1.txt')
-        >>> l.est_gagne() 
-        False
-        >>> l.position_joueur = (6, 1)
-        >>> l.est_gagne()
-        True
-        '''
-        return self.position_joueur == self.position_sortie # Renvoie True si la position du joueur est égal à la position de la sortie. 
     
-    def est_possible(self, direction):
-        '''
-        Auteur : CAPPONI DELY Arthur
-        Renvoie True si le déplacement dans la direction est possible (c'est à dire s'il n'y a pas de mur à la prochaine position/coordonnées du joueur),
-        False sinon.
-        : param direction (str), 'z' ou 'q' ou 's' ou 'd'
-        : return (boolean)
-        
-        >>> l = Labyrinthe('lab1.txt')
-        >>> l.est_possible('z')
-        False
-        >>> l.est_possible('s')
-        True
-        '''
-        #Précondition :
-        assert isinstance(direction, str) and direction in ['z', 'q', 's', 'd'], 'Le paramètre doit être une chaine de caractère (str).'
-        #Code :
-        future_position = self.future_position(direction) # On créé une variable future_position qui est égal à la méthode future_position.
-        return self.acc_lab(future_position[0], future_position[1]) != '#' # Renvoie le contenu de la case pour la future position.
-        
     def future_position(self, direction):
         '''
-        Auteur : AMEDRO Louis
         Renvoie les coordonnées de la prochaine position du joueur.
         S'il se déplaçait dans la direction passé en paramètre.
         : param direction (str), 'z' ou 'q' ou 's' ou 'd'
         : return (tuple)
-        
-        >>> l = Labyrinthe('lab1.txt')
-        >>> l.acc_position_joueur()
-        (1, 1)
-        >>> l.future_position('s')
-        (1, 2)
         '''
-        #Précondition :
-        assert isinstance(direction, str) and direction in ['z', 'q', 's', 'd'], 'Le paramètre doit être une chaine de caractère (str).'
-        #Code :
         directions = { 'z' : (0, -1), #en haut
                        's' : (0, 1),  #en bas
                        'd' : (1, 0),  #à droite
                        'q' : (-1, 0)  #gauche
                      }
-        return (directions[direction][0] + self.position_joueur[0], directions[direction][1] + self.position_joueur[1]) #Renvoie, si on admet la direction, la nouvelle position du joueur en fonction de la direction passé en paramètre en ajoutant la valeur de x et de y pas la valeur du x et du y du dictionnaire de direction.       
+        return (directions[direction][0] + self.position_joueur[0], directions[direction][1] + self.position_joueur[1]) #Renvoie, si on admet la direction, la nouvelle position du joueur en fonction de la direction passé en paramètre en ajoutant la valeur de x et de y pas la valeur du x et du y du dictionnaire de direction. 
+ 
+    def est_possible(self, direction):
+        '''
+        Renvoie True si le déplacement dans la direction est possible (c'est à dire s'il n'y a pas de mur à la prochaine position/coordonnées du joueur),
+        False sinon.
+        : param direction (str), 'z' ou 'q' ou 's' ou 'd'
+        : return (boolean)
+        '''
+        future_position = self.future_position(direction) # On créé une variable future_position qui est égal à la méthode future_position.
+        return self.laby[future_position[1]][future_position[0]] != 1 # Renvoie le contenu de la case pour la future position.
+        
+    def deplacer(self, direction):
+        '''
+        Modifie les coordonnées du joueur 'X' dans la direction souhaitée si possible.
+        : param direction (str), 'z' ou 'q' ou 's' ou 'd'
+        : pas de return, on change l'attribut position_joueur.
+        '''
+        if self.est_possible(direction) : #Si le déplacement vers la direction passé en paramètre est possible, alors :
+            self.mut_laby(self.position_joueur[0], self.position_joueur[1], 0) #Change le caractère du labyrinthe aux coordonnées du joueur (x, y) en un chemin/caractère vide.
+            self.position_joueur = self.future_position(direction) #Change la position du joueur en sa nouvelle position dans la direction souhaité.
+            self.mut_laby(self.position_joueur[0], self.position_joueur[1], 'X') #Change le caractère du labyrinthe aux coordonnées du joueur (x, y) en 'X'.
+            return 1
+        return 0
+            
+    def est_gagne(self) :
+        '''
+        Renvoie True si la partie est finie, False sinon.
+        : return (boolean)
+        '''
+        return self.position_joueur == self.position_sortie # Renvoie True si la position du joueur est égal à la position de la sortie. 
+
+    ##############################################################################
+    ### Affichages :
+    ##############################################################################
+        
+    def afficher(self) :
+        for y in range(len(self.laby)) :
+            for x in range(len(self.laby[y])) :
+                carac = self.laby[y][x]
+                if carac == 'X' :
+                    pyxel.blt(x * 8, y * 8, 1, 0, 8 * self.apparence_joueur, 8, 8, 0)
+                elif carac == 'S' :
+                    pyxel.blt(x * 8, y * 8, 1, 8, 0, 8, 8, 0)
+                elif carac == 1 :
+                    pyxel.blt(x * 8, y * 8, 1, 8, 8, 8, 8, 0)
         
 ######################################################
 ### Classe Jeu :
@@ -385,10 +440,9 @@ class Jeu() :
         self.menu = False
         self.clavier = True
         
-        #Personnage :
-        self.longueur = 5
-        self.hauteur = 3
-        self.personnage = Personnage()
+        #Partie :
+        self.difficulte = 6
+        self.apparence_joueur = 0
         
         #Partie :
         self.nombre_deplacements = 0
@@ -420,82 +474,79 @@ class Jeu() :
             #Jouer :
             if 76 <= pyxel.mouse_x <= 124 and 65 <= pyxel.mouse_y <= 81:
                 self.menu = False
-                self.temps_commence = time.time()
-                self.personnage.placer_partie()
+                self.labyrinthe = Labyrinthe(self.difficulte * 2, 3, self.apparence_joueur)
             
             #Plateforme :
             elif 179 <= pyxel.mouse_x <= 195 and 5 <= pyxel.mouse_y <= 21 :
                 self.clavier = not self.clavier
                 pyxel.mouse(self.clavier)
                 
-            ###Longueur :    
-            #Gauche :
-            if 18 <= pyxel.mouse_x <= 26 and 35 <= pyxel.mouse_y <= 43 and 2 < self.longueur :
-                self.longueur -= 1
-            
-            #Droite :
-            elif 35 <= pyxel.mouse_x <= 43 and 35 <= pyxel.mouse_y <= 43 and self.longueur < 6 :
-                self.longueur += 1
+            ###Zone Flèches :    
+            elif  55 <= pyxel.mouse_y <= 63 :   
                 
-            ###Hauteur :
-            #Gauche :
-            if 18 <= pyxel.mouse_x <= 26 and 60 <= pyxel.mouse_y <= 68 and 2 < self.hauteur :
-                self.hauteur -= 1
-            
-            #Droite :
-            elif 35 <= pyxel.mouse_x <= 43 and 60 <= pyxel.mouse_y <= 68 and self.hauteur < 5 :
-                self.hauteur += 1
+                ### Difficulté :
+                #Gauche :
+                if 18 <= pyxel.mouse_x <= 26 and 2 < self.difficulte :
+                    self.difficulte -= 1
+                
+                #Droite :
+                elif 35 <= pyxel.mouse_x <= 43 and self.difficulte < 7 :
+                    self.difficulte += 1
                
-            ###Personnage :                        
-            #Gauche :
-            elif 152 <= pyxel.mouse_x <= 160 and 55 <= pyxel.mouse_y <= 63 and 0 < self.personnage.acc_apparence() :
-                self.personnage.changement_apparence(-1)
-                
-            #Droite :
-            elif 168 <= pyxel.mouse_x <= 176 and 55 <= pyxel.mouse_y <= 63 and self.personnage.acc_apparence() < 11 :
-                self.personnage.changement_apparence(1)
+                ###Personnage :                        
+                #Gauche :
+                elif 152 <= pyxel.mouse_x <= 160 and 0 < self.apparence_joueur :
+                    self.apparence_joueur -= 1
+                    
+                #Droite :
+                elif 168 <= pyxel.mouse_x <= 176 and self.apparence_joueur < 11 :
+                    self.apparence_joueur += 1
     
     def bouton_retour(self):
         if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) :
             if 10 <= pyxel.mouse_x <= 58 and 69 <= pyxel.mouse_y <= 85 :
-                self.tab_balles = []
-                self.personnage.placer_menu()
-                self.score = 0
                 self.menu = True
                 self.fin_partie = False
+                self.nombre_deplacements = 0
                     
     ###Contrôles :
                     
     def controle_clavier_manette(self):
-        if (pyxel.btnr(pyxel.KEY_Q) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT)) and self.personnage.acc_x() > 0:
-            self.personnage.gauche()
-        if (pyxel.btnr(pyxel.KEY_D) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT)) and self.personnage.acc_x() < 192 :
-            self.personnage.droite()
-        if (pyxel.btnr(pyxel.KEY_Z) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_UP)) and self.personnage.acc_y() > 0:
-            self.personnage.haut()
-        if (pyxel.btnr(pyxel.KEY_S) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN)) and self.personnage.acc_y() < 52 :
-            self.personnage.bas()
+        if (pyxel.btnr(pyxel.KEY_Q) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT)):
+            self.nombre_deplacements += self.labyrinthe.deplacer('q')
+        if (pyxel.btnr(pyxel.KEY_D) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT)):
+            self.nombre_deplacements += self.labyrinthe.deplacer('d')
+        if (pyxel.btnr(pyxel.KEY_Z) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_UP)):
+            self.nombre_deplacements += self.labyrinthe.deplacer('z')
+        if (pyxel.btnr(pyxel.KEY_S) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN)):
+            self.nombre_deplacements += self.labyrinthe.deplacer('s')
         
     def controle_tactile(self):
         if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) :
             #Gauche :
-            if 136 <= pyxel.mouse_x <= 152 and 76 <= pyxel.mouse_y <= 92 and self.personnage.acc_x() > 0:
-                self.personnage.gauche()
+            if 136 <= pyxel.mouse_x <= 152 and 76 <= pyxel.mouse_y <= 9:
+                self.nombre_deplacements += self.labyrinthe.deplacer('q')
             #Droite :
-            if 168 <= pyxel.mouse_x <= 184 and 76 <= pyxel.mouse_y <= 92 and self.personnage.acc_x() < 192:
-                self.personnage.droite()
+            if 168 <= pyxel.mouse_x <= 184 and 76 <= pyxel.mouse_y <= 92:
+                self.nombre_deplacements += self.labyrinthe.deplacer('d')
             #Haut :
-            if 152 <= pyxel.mouse_x <= 168 and 60 <= pyxel.mouse_y <= 76 and self.personnage.acc_y() > 0:
-                self.personnage.haut()
+            if 152 <= pyxel.mouse_x <= 168 and 60 <= pyxel.mouse_y <= 76:
+                self.nombre_deplacements += self.labyrinthe.deplacer('z')
             #Bas :
-            if 152 <= pyxel.mouse_x <= 168 and 76 <= pyxel.mouse_y <= 92 and self.personnage.acc_y() < 52:
-                self.personnage.bas()
+            if 152 <= pyxel.mouse_x <= 168 and 76 <= pyxel.mouse_y <= 92:
+                self.nombre_deplacements += self.labyrinthe.deplacer('s')
     
     def controle_personnage(self):
         if self.clavier :
             self.controle_clavier_manette()
         else :
             self.controle_tactile()
+    
+    ###Partie Terminée :
+    
+    def est_fini(self):
+        self.fin_partie = self.labyrinthe.est_gagne()
+        return self.fin_partie
     
     ###Calculs :
        
@@ -513,9 +564,6 @@ class Jeu() :
         else :
             if not self.est_fini() :
                 self.controle_personnage()
-                self.actions_balles()
-                self.prendre_piece()
-                self.temps = int(time.time() - self.temps_commence)
             self.bouton_retour()
             
     ######################################################
@@ -528,54 +576,40 @@ class Jeu() :
     
     def afficher_menu(self):
         #Version :
-        pyxel.text(2, 85, '0.0.1', 7)
+        pyxel.text(2, 85, '0.0.2', 7)
         
         #Titre :
         pyxel.rect(81, 18, 39, 9, 9)
         pyxel.rectb(81, 18, 39, 9, 7)
         pyxel.text(83, 20, 'Fast Maze', 7)
         
-        ###Boutons Longueur:
-        pyxel.text(15, 27, 'Longueur', 7)
-        pyxel.text(29, 36, str(self.longueur), 7)
+        ###Boutons Difficulté:
+        pyxel.text(15, 47, 'Difficulte', 7)
+        pyxel.text(29, 56, str(self.difficulte), 7)
         
         #Gauche :
-        if 2 < self.longueur :
-            pyxel.blt(18, 35, 0, 0, 48, 8, 8)
+        if 2 < self.difficulte :
+            pyxel.blt(18, 55, 0, 0, 48, 8, 8)
         else :
-            pyxel.blt(18, 35, 0, 16, 48, 8, 8)
+            pyxel.blt(18, 55, 0, 16, 48, 8, 8)
         
         #Droite :
-        if self.longueur < 6 :
-            pyxel.blt(35, 35, 0, 8, 48, 8, 8)
+        if self.difficulte < 7 :
+            pyxel.blt(35, 55, 0, 8, 48, 8, 8)
         else :
-            pyxel.blt(35, 35, 0, 24, 48, 8, 8)
-            
-        ###Boutons Hauteur:
-        pyxel.text(17, 52, 'Hauteur', 7)
-        pyxel.text(29, 61, str(self.hauteur), 7)
-        
-        #Gauche :
-        if 2 < self.hauteur :
-            pyxel.blt(18, 60, 0, 0, 48, 8, 8)
-        else :
-            pyxel.blt(18, 60, 0, 16, 48, 8, 8)
-        
-        #Droite :
-        if self.hauteur < 5 :
-            pyxel.blt(35, 60, 0, 8, 48, 8, 8)
-        else :
-            pyxel.blt(35, 60, 0, 24, 48, 8, 8)
+            pyxel.blt(35, 55, 0, 24, 48, 8, 8)
         
         ###Boutons Personnage :
+        pyxel.blt(160, 37, 1, 0, 8 * self.apparence_joueur, 8, 8, 0)
+        
         #Gauche :
-        if 0 < self.personnage.acc_apparence() :
+        if 0 < self.apparence_joueur :
             pyxel.blt(152, 55, 0, 0, 48, 8, 8)
         else :
             pyxel.blt(152, 55, 0, 16, 48, 8, 8)
         
         #Droite :
-        if self.personnage.acc_apparence() < 11 :
+        if self.apparence_joueur < 11 :
             pyxel.blt(168, 55, 0, 8, 48, 8, 8)
         else :
             pyxel.blt(168, 55, 0, 24, 48, 8, 8)
@@ -594,7 +628,7 @@ class Jeu() :
         #Information :
         pyxel.rect(0, 60, 200, 33, 5)
         pyxel.rectb(0, 60, 200, 33, 7)
-        pyxel.text(50, 70, 'Nombre Deplacements : ' + str(self.nombre_deplacements), 7)
+        pyxel.text(65, 70, 'Nombre\nDeplacements : ' + str(self.nombre_deplacements), 7)
         
         #Bouton Retour :
         pyxel.blt(10, 69, 0, 0, 32, 48, 16)
@@ -618,15 +652,12 @@ class Jeu() :
         ### Menu :
         elif self.menu :
             self.afficher_menu()
-            self.personnage.afficher()
         
         ### Partie :
         else :
             self.afficher_partie()
             if not self.fin_partie :
-                self.piece.afficher()
-                self.personnage.afficher()
-                self.afficher_balles()
+                self.labyrinthe.afficher()
             else :
                 self.afficher_fin()
                 
