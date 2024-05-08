@@ -464,7 +464,7 @@ class Jeu() :
         self.fin_partie = False
         
         #Initialisation de la fenêtre Pyxel: 200 92
-        pyxel.init(200, 136, title='Fast Maze', fps=60, capture_scale=3, capture_sec=0)
+        pyxel.init(264, 120, title='Fast Maze', fps=60, capture_scale=3, capture_sec=0)
         pyxel.mouse(True)
         pyxel.load('ressources.pyxres')
         pyxel.playm(0)
@@ -489,7 +489,7 @@ class Jeu() :
             #Jouer :
             if 76 <= pyxel.mouse_x <= 124 and 65 <= pyxel.mouse_y <= 81:
                 self.menu = False
-                self.labyrinthe = Labyrinthe(12, 6, self.apparence_joueur)
+                self.labyrinthe = Labyrinthe(16, 5, self.apparence_joueur)
             
             #Plateforme :
             elif 179 <= pyxel.mouse_x <= 195 and 5 <= pyxel.mouse_y <= 21 :
@@ -586,17 +586,17 @@ class Jeu() :
     ######################################################
     
     def afficher_intro(self) :
-        pyxel.blt(84, 38, 0, 0, 56, 32, 16)
-        pyxel.text(100, 55, 'Games', 7)
+        pyxel.blt(113, 51, 0, 0, 56, 32, 16)
+        pyxel.text(129, 68, 'Games', 7)
     
     def afficher_menu(self):
         #Version :
-        pyxel.text(2, 128, '0.0.3', 7)
+        pyxel.text(2, 113, '0.0.4', 7)
         
         #Titre :
-        pyxel.rect(81, 18, 39, 9, 9)
-        pyxel.rectb(81, 18, 39, 9, 7)
-        pyxel.text(83, 20, 'Fast Maze', 7)
+        pyxel.rect(113, 18, 39, 9, 9)
+        pyxel.rectb(113, 18, 39, 9, 7)
+        pyxel.text(115, 20, 'Fast Maze', 7)
         
         ###Boutons Difficulté:
         pyxel.text(15, 47, 'Difficulte', 7)
@@ -630,29 +630,29 @@ class Jeu() :
             pyxel.blt(168, 55, 0, 24, 48, 8, 8)
         
         #Boutons Jouer:
-        pyxel.blt(76, 65, 0, 0, 0, 48, 16)
+        pyxel.blt(108, 90, 0, 0, 0, 48, 16)
         
         #Bouton Plateforme :
         dic = {
             True : 0,
             False : 16
         }
-        pyxel.blt(179, 5, 0, dic[self.clavier], 16, 16, 16)
+        pyxel.blt(243, 5, 0, dic[self.clavier], 16, 16, 16)
         
     def afficher_partie(self):      
         #Information :
-        pyxel.rect(0, 104, 200, 33, 13)
-        pyxel.rectb(0, 104, 200, 33, 7)
-        pyxel.text(65, 110, 'Nombre\nDeplacements : ' + str(self.nombre_deplacements), 7)
+        pyxel.rect(0, 88, 200, 33, 13)
+        pyxel.rectb(0, 88, 200, 33, 7)
+        pyxel.text(65, 97, 'Nombre\nDeplacements : ' + str(self.nombre_deplacements), 7)
         
         #Bouton Retour :
-        pyxel.blt(10, 113, 0, 0, 32, 48, 16)
+        pyxel.blt(10, 97, 0, 0, 32, 48, 16)
         
         #Touche :
         if self.clavier :
-            pyxel.blt(136, 104, 0, 0, 104, 48, 32, 0)
+            pyxel.blt(136, 88, 0, 0, 104, 48, 32, 0)
         else :
-            pyxel.blt(136, 104, 0, 0, 72, 48, 32, 0)
+            pyxel.blt(136, 88, 0, 0, 72, 48, 32, 0)
                 
     def afficher_fin(self):
         pyxel.text(78, 18, 'Tu es\n  Sorti !', 7)
