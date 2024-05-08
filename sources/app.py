@@ -323,17 +323,18 @@ class Labyrinthe() :
     ### Fonction d'Emplacement Personnage/Sortie :
     ######################################################
     
-    def placer(self, largeur, hauteur, sortie = False):
-        constat_perso = False
-        while not constat_perso :
-            coordonnees_personnage = (random.randint(0, largeur * 2), random.randint(0, hauteur * 2))
-            if self.laby[coordonnees_personnage[1]][coordonnees_personnage[0]] == 0:
-                constat_perso = True
-                if not sortie : 
-                    self.laby[coordonnees_personnage[1]][coordonnees_personnage[0]] = 'X'
-                else :
-                    self.laby[coordonnees_personnage[1]][coordonnees_personnage[0]] = 'S'
-        return coordonnees_personnage
+    def placer(self, largeur, hauteur, objet):
+        constat = False
+        while not constat :
+            coordonnees = (random.randint(0, largeur * 2), random.randint(0, hauteur * 2))
+            if self.laby[coordonnees[1]][coordonnees[0]] == 0:
+                if objet == 'joueur' :   
+                    constat = True
+                elif objet == 'sortie' and coordonnees != self.position_joueur:
+                    constat = True
+                elif objet == 'cle' and coordonnees != self.position_joueur and coordonnees != self.position_sortie :
+                    constat = True
+        return coordonnees
         
     ######################################################
     ### Initialisation :
@@ -342,8 +343,14 @@ class Labyrinthe() :
     def __init__(self, largeur, hauteur, apparence_joueur):
         self.laby = Labyrinthe.construire_tab_laby(largeur, hauteur)
         self.apparence_joueur = apparence_joueur
-        self.position_joueur = self.placer(largeur, hauteur)
-        self.position_sortie = self.placer(largeur, hauteur, True)
+        
+        #Positions :
+        self.position_joueur = self.placer(largeur, hauteur, 'joueur')
+        self.position_sortie = self.placer(largeur, hauteur, 'sortie')
+        self.position_cle = self.placer(largeur, hauteur, 'cle')
+        
+        #Cle récupéré ?
+        self.cle_recupere = False
     
     ##############################################################################
     ### Mutateurs :
@@ -393,21 +400,25 @@ class Labyrinthe() :
         '''
         Modifie les coordonnées du joueur 'X' dans la direction souhaitée si possible.
         : param direction (str), 'z' ou 'q' ou 's' ou 'd'
-        : pas de return, on change l'attribut position_joueur.
+        : return 0 ou 1 pour ajouter au nombre de déplacements
         '''
         if self.est_possible(direction) : #Si le déplacement vers la direction passé en paramètre est possible, alors :
-            self.mut_laby(self.position_joueur[0], self.position_joueur[1], 0) #Change le caractère du labyrinthe aux coordonnées du joueur (x, y) en un chemin/caractère vide.
             self.position_joueur = self.future_position(direction) #Change la position du joueur en sa nouvelle position dans la direction souhaité.
-            self.mut_laby(self.position_joueur[0], self.position_joueur[1], 'X') #Change le caractère du labyrinthe aux coordonnées du joueur (x, y) en 'X'.
             return 1
-        return 0
-            
+        return 0 
+        
+    def est_recupere_cle(self):
+        self.cle_recupere = self.position_joueur == self.position_cle
+        return self.cle_recupere
+          
     def est_gagne(self) :
         '''
         Renvoie True si la partie est finie, False sinon.
         : return (boolean)
         '''
-        return self.position_joueur == self.position_sortie # Renvoie True si la position du joueur est égal à la position de la sortie. 
+        if not self.cle_recupere :
+            self.est_recupere_cle()
+        return self.cle_recupere and self.position_joueur == self.position_sortie # Renvoie True si la position du joueur est égal à la position de la sortie. 
 
     ##############################################################################
     ### Affichages :
@@ -416,13 +427,17 @@ class Labyrinthe() :
     def afficher(self) :
         for y in range(len(self.laby)) :
             for x in range(len(self.laby[y])) :
-                carac = self.laby[y][x]
-                if carac == 'X' :
-                    pyxel.blt(x * 8, y * 8, 1, 0, 8 * self.apparence_joueur, 8, 8, 0)
-                elif carac == 'S' :
-                    pyxel.blt(x * 8, y * 8, 1, 8, 0, 8, 8, 0)
-                elif carac == 1 :
+                if self.laby[y][x] == 1 :
                     pyxel.blt(x * 8, y * 8, 1, 8, 8, 8, 8, 0)
+        
+        ###Sortie/Cle :
+        pyxel.blt(self.position_sortie[0] * 8, self.position_sortie[1] * 8, 1, 8, 0, 8, 8, 0)
+        if not self.cle_recupere :
+            pyxel.blt(self.position_sortie[0] * 8, self.position_sortie[1] * 8, 1, 16, 0, 8, 8, 0)
+            pyxel.blt(self.position_cle[0] * 8, self.position_cle[1] * 8, 1, 8, 16, 8, 8, 0)            
+        
+        ###Joueur :
+        pyxel.blt(self.position_joueur[0] * 8, self.position_joueur[1] * 8, 1, 0, 8 * self.apparence_joueur, 8, 8, 0)
         
 ######################################################
 ### Classe Jeu :
@@ -448,8 +463,8 @@ class Jeu() :
         self.nombre_deplacements = 0
         self.fin_partie = False
         
-        #Initialisation de la fenêtre Pyxel:
-        pyxel.init(200, 92, title='Fast Maze', fps=60, capture_scale=3, capture_sec=0)
+        #Initialisation de la fenêtre Pyxel: 200 92
+        pyxel.init(200, 136, title='Fast Maze', fps=60, capture_scale=3, capture_sec=0)
         pyxel.mouse(True)
         pyxel.load('ressources.pyxres')
         pyxel.playm(0)
@@ -474,7 +489,7 @@ class Jeu() :
             #Jouer :
             if 76 <= pyxel.mouse_x <= 124 and 65 <= pyxel.mouse_y <= 81:
                 self.menu = False
-                self.labyrinthe = Labyrinthe(self.difficulte * 2, 3, self.apparence_joueur)
+                self.labyrinthe = Labyrinthe(12, 6, self.apparence_joueur)
             
             #Plateforme :
             elif 179 <= pyxel.mouse_x <= 195 and 5 <= pyxel.mouse_y <= 21 :
@@ -576,7 +591,7 @@ class Jeu() :
     
     def afficher_menu(self):
         #Version :
-        pyxel.text(2, 85, '0.0.2', 7)
+        pyxel.text(2, 128, '0.0.3', 7)
         
         #Titre :
         pyxel.rect(81, 18, 39, 9, 9)
@@ -626,18 +641,18 @@ class Jeu() :
         
     def afficher_partie(self):      
         #Information :
-        pyxel.rect(0, 60, 200, 33, 5)
-        pyxel.rectb(0, 60, 200, 33, 7)
-        pyxel.text(65, 70, 'Nombre\nDeplacements : ' + str(self.nombre_deplacements), 7)
+        pyxel.rect(0, 104, 200, 33, 13)
+        pyxel.rectb(0, 104, 200, 33, 7)
+        pyxel.text(65, 110, 'Nombre\nDeplacements : ' + str(self.nombre_deplacements), 7)
         
         #Bouton Retour :
-        pyxel.blt(10, 69, 0, 0, 32, 48, 16)
+        pyxel.blt(10, 113, 0, 0, 32, 48, 16)
         
         #Touche :
         if self.clavier :
-            pyxel.blt(136, 60, 0, 0, 104, 48, 32, 0)
+            pyxel.blt(136, 104, 0, 0, 104, 48, 32, 0)
         else :
-            pyxel.blt(136, 60, 0, 0, 72, 48, 32, 0)
+            pyxel.blt(136, 104, 0, 0, 72, 48, 32, 0)
                 
     def afficher_fin(self):
         pyxel.text(78, 18, 'Tu es\n  Sorti !', 7)
