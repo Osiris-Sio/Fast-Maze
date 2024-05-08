@@ -340,9 +340,10 @@ class Labyrinthe() :
     ### Initialisation :
     ######################################################
     
-    def __init__(self, largeur, hauteur, apparence_joueur):
+    def __init__(self, largeur, hauteur, apparence_joueur, apparence_murs):
         self.laby = Labyrinthe.construire_tab_laby(largeur, hauteur)
         self.apparence_joueur = apparence_joueur
+        self.apparence_murs = apparence_murs
         
         #Positions :
         self.position_joueur = self.placer(largeur, hauteur, 'joueur')
@@ -409,6 +410,8 @@ class Labyrinthe() :
         
     def est_recupere_cle(self):
         self.cle_recupere = self.position_joueur == self.position_cle
+        if self.cle_recupere :
+            pyxel.play(0, 1)
         return self.cle_recupere
           
     def est_gagne(self) :
@@ -428,13 +431,14 @@ class Labyrinthe() :
         for y in range(len(self.laby)) :
             for x in range(len(self.laby[y])) :
                 if self.laby[y][x] == 1 :
-                    pyxel.blt(x * 8, y * 8, 1, 8, 8, 8, 8, 0)
+                    pyxel.rect(x * 8, y * 8, 8, 8, 13)
+                    pyxel.rectb(x * 8, y * 8, 8, 8, self.apparence_murs)
         
         ###Sortie/Cle :
         pyxel.blt(self.position_sortie[0] * 8, self.position_sortie[1] * 8, 1, 8, 0, 8, 8, 0)
         if not self.cle_recupere :
             pyxel.blt(self.position_sortie[0] * 8, self.position_sortie[1] * 8, 1, 16, 0, 8, 8, 0)
-            pyxel.blt(self.position_cle[0] * 8, self.position_cle[1] * 8, 1, 8, 16, 8, 8, 0)            
+            pyxel.blt(self.position_cle[0] * 8, self.position_cle[1] * 8, 1, 8, 8, 8, 8, 0)            
         
         ###Joueur :
         pyxel.blt(self.position_joueur[0] * 8, self.position_joueur[1] * 8, 1, 0, 8 * self.apparence_joueur, 8, 8, 0)
@@ -444,6 +448,7 @@ class Labyrinthe() :
 ######################################################
 
 class Jeu() :
+    
     
     def __init__(self) :
         
@@ -456,7 +461,7 @@ class Jeu() :
         self.clavier = True
         
         #Partie :
-        self.difficulte = 6
+        self.apparence_murs = 9
         self.apparence_joueur = 0
         
         #Partie :
@@ -487,39 +492,39 @@ class Jeu() :
         if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) :
             
             #Jouer :
-            if 76 <= pyxel.mouse_x <= 124 and 65 <= pyxel.mouse_y <= 81:
+            if 108 <= pyxel.mouse_x <= 156 and 90 <= pyxel.mouse_y <= 106:
                 self.menu = False
-                self.labyrinthe = Labyrinthe(16, 5, self.apparence_joueur)
+                self.labyrinthe = Labyrinthe(16, 5, self.apparence_joueur, self.apparence_murs)
             
             #Plateforme :
-            elif 179 <= pyxel.mouse_x <= 195 and 5 <= pyxel.mouse_y <= 21 :
+            elif 243 <= pyxel.mouse_x <= 259 and 5 <= pyxel.mouse_y <= 21 :
                 self.clavier = not self.clavier
                 pyxel.mouse(self.clavier)
                 
             ###Zone Flèches :    
-            elif  55 <= pyxel.mouse_y <= 63 :   
+            elif 65 <= pyxel.mouse_y <= 73 :   
                 
-                ### Difficulté :
+                ###Murs :
                 #Gauche :
-                if 18 <= pyxel.mouse_x <= 26 and 2 < self.difficulte :
-                    self.difficulte -= 1
+                if 56 <= pyxel.mouse_x <= 64 and 1 < self.apparence_murs :
+                    self.apparence_murs -= 1
                 
                 #Droite :
-                elif 35 <= pyxel.mouse_x <= 43 and self.difficulte < 7 :
-                    self.difficulte += 1
+                elif 72 <= pyxel.mouse_x <= 80 and self.apparence_murs < 15 :
+                    self.apparence_murs += 1
                
                 ###Personnage :                        
                 #Gauche :
-                elif 152 <= pyxel.mouse_x <= 160 and 0 < self.apparence_joueur :
+                elif 192 <= pyxel.mouse_x <= 200 and 0 < self.apparence_joueur :
                     self.apparence_joueur -= 1
                     
                 #Droite :
-                elif 168 <= pyxel.mouse_x <= 176 and self.apparence_joueur < 11 :
+                elif 208 <= pyxel.mouse_x <= 216 and self.apparence_joueur < 11 :
                     self.apparence_joueur += 1
     
     def bouton_retour(self):
         if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) :
-            if 10 <= pyxel.mouse_x <= 58 and 69 <= pyxel.mouse_y <= 85 :
+            if 10 <= pyxel.mouse_x <= 58 and 97 <= pyxel.mouse_y <= 113 :
                 self.menu = True
                 self.fin_partie = False
                 self.nombre_deplacements = 0
@@ -539,16 +544,16 @@ class Jeu() :
     def controle_tactile(self):
         if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) :
             #Gauche :
-            if 136 <= pyxel.mouse_x <= 152 and 76 <= pyxel.mouse_y <= 9:
+            if 200 <= pyxel.mouse_x <= 216 and 104 <= pyxel.mouse_y <= 120 :
                 self.nombre_deplacements += self.labyrinthe.deplacer('q')
             #Droite :
-            if 168 <= pyxel.mouse_x <= 184 and 76 <= pyxel.mouse_y <= 92:
+            if 232 <= pyxel.mouse_x <= 248 and 104 <= pyxel.mouse_y <= 120:
                 self.nombre_deplacements += self.labyrinthe.deplacer('d')
             #Haut :
-            if 152 <= pyxel.mouse_x <= 168 and 60 <= pyxel.mouse_y <= 76:
+            if 216 <= pyxel.mouse_x <= 232 and 88 <= pyxel.mouse_y <= 104:
                 self.nombre_deplacements += self.labyrinthe.deplacer('z')
             #Bas :
-            if 152 <= pyxel.mouse_x <= 168 and 76 <= pyxel.mouse_y <= 92:
+            if 216 <= pyxel.mouse_x <= 232 and 104 <= pyxel.mouse_y <= 120:
                 self.nombre_deplacements += self.labyrinthe.deplacer('s')
     
     def controle_personnage(self):
@@ -561,6 +566,8 @@ class Jeu() :
     
     def est_fini(self):
         self.fin_partie = self.labyrinthe.est_gagne()
+        if self.fin_partie :
+            pyxel.play(0, 2)
         return self.fin_partie
     
     ###Calculs :
@@ -577,7 +584,7 @@ class Jeu() :
         
         ### Partie :
         else :
-            if not self.est_fini() :
+            if not self.fin_partie and not self.est_fini() :
                 self.controle_personnage()
             self.bouton_retour()
             
@@ -598,36 +605,36 @@ class Jeu() :
         pyxel.rectb(113, 18, 39, 9, 7)
         pyxel.text(115, 20, 'Fast Maze', 7)
         
-        ###Boutons Difficulté:
-        pyxel.text(15, 47, 'Difficulte', 7)
-        pyxel.text(29, 56, str(self.difficulte), 7)
+        ###Boutons Murs :
+        pyxel.rect(64, 47, 8, 8, 13)
+        pyxel.rectb(64, 47, 8, 8, self.apparence_murs)
         
         #Gauche :
-        if 2 < self.difficulte :
-            pyxel.blt(18, 55, 0, 0, 48, 8, 8)
+        if 1 < self.apparence_murs :
+            pyxel.blt(56, 65, 0, 0, 48, 8, 8)
         else :
-            pyxel.blt(18, 55, 0, 16, 48, 8, 8)
+            pyxel.blt(56, 65, 0, 16, 48, 8, 8)
         
         #Droite :
-        if self.difficulte < 7 :
-            pyxel.blt(35, 55, 0, 8, 48, 8, 8)
+        if self.apparence_murs < 15 :
+            pyxel.blt(72, 65, 0, 8, 48, 8, 8)
         else :
-            pyxel.blt(35, 55, 0, 24, 48, 8, 8)
+            pyxel.blt(72, 65, 0, 24, 48, 8, 8)
         
         ###Boutons Personnage :
-        pyxel.blt(160, 37, 1, 0, 8 * self.apparence_joueur, 8, 8, 0)
+        pyxel.blt(200, 47, 1, 0, 8 * self.apparence_joueur, 8, 8, 0)
         
         #Gauche :
         if 0 < self.apparence_joueur :
-            pyxel.blt(152, 55, 0, 0, 48, 8, 8)
+            pyxel.blt(192, 65, 0, 0, 48, 8, 8)
         else :
-            pyxel.blt(152, 55, 0, 16, 48, 8, 8)
+            pyxel.blt(192, 65, 0, 16, 48, 8, 8)
         
         #Droite :
         if self.apparence_joueur < 11 :
-            pyxel.blt(168, 55, 0, 8, 48, 8, 8)
+            pyxel.blt(208, 65, 0, 8, 48, 8, 8)
         else :
-            pyxel.blt(168, 55, 0, 24, 48, 8, 8)
+            pyxel.blt(208, 65, 0, 24, 48, 8, 8)
         
         #Boutons Jouer:
         pyxel.blt(108, 90, 0, 0, 0, 48, 16)
@@ -641,21 +648,21 @@ class Jeu() :
         
     def afficher_partie(self):      
         #Information :
-        pyxel.rect(0, 88, 200, 33, 13)
-        pyxel.rectb(0, 88, 200, 33, 7)
-        pyxel.text(65, 97, 'Nombre\nDeplacements : ' + str(self.nombre_deplacements), 7)
+        pyxel.rect(0, 88, 264, 33, 13)
+        pyxel.rectb(0, 88, 264, 33, 7)
+        pyxel.text(95, 97, 'Nombre de\nDeplacements : ' + str(self.nombre_deplacements), 7)
         
         #Bouton Retour :
         pyxel.blt(10, 97, 0, 0, 32, 48, 16)
         
         #Touche :
         if self.clavier :
-            pyxel.blt(136, 88, 0, 0, 104, 48, 32, 0)
+            pyxel.blt(200, 88, 0, 0, 104, 48, 32, 0)
         else :
-            pyxel.blt(136, 88, 0, 0, 72, 48, 32, 0)
+            pyxel.blt(200, 88, 0, 0, 72, 48, 32, 0)
                 
     def afficher_fin(self):
-        pyxel.text(78, 18, 'Tu es\n  Sorti !', 7)
+        pyxel.text(115, 30, 'Tu es\n Sorti !', 7)
         
     def affichages(self):
         #Fond Noir :
