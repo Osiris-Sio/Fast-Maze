@@ -9,7 +9,7 @@ Vous pouvez également jouer hors ligne en installant game.html sur PC et Smartp
 
 <img src="res/crabe.png" /> <img src="res/cle.png" /> <img src="res/sortie.png" />
 
-Plongez dans l'excitation de l'aventure avec Fast Maze, un jeu captivant où votre reflection est honoré dans un petit labyrinthe ! Votre objectif est simple : récupérer la clé dans le labyrinthe et trouver le chemin vers la sortie.
+Plongez dans l'excitation de l'aventure avec Fast Maze, un jeu captivant où votre réflexion est honoré dans un petit labyrinthe ! Votre objectif est simple : récupérer la clé dans le labyrinthe et trouver le chemin vers la sortie.
 
 Chaque fois que vous lancez une nouvelle partie, le labyrinthe est généré de manière aléatoire, vous assurant une expérience unique à chaque fois.
 
