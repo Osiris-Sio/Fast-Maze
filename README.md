@@ -1,44 +1,40 @@
 # Jouer
 
-[Clique ici](https://osiris-sio.github.io/HTML_Ball-Challenge/) pour jouer sur le navigateur, que vous soyez sur PC ou Smartphone !
-Vous pouvez également jouer hors ligne en installant game.html sur PC et Smartphone ([ici](https://github.com/Osiris-Sio/Ball-Challenge/blob/main/game.html)).
+[Clique ici](https://osiris-sio.github.io/HTML_Fast-Maze/) pour jouer sur le navigateur, que vous soyez sur PC ou Smartphone !
+Vous pouvez également jouer hors ligne en installant game.html sur PC et Smartphone ([ici](https://github.com/Osiris-Sio/Fast-Maze/blob/main/game.html)).
 
-# Description 
+# Description et Caractéristiques
 
 <img src="res/titre.png" />
 
-Plongez dans l'action avec _Ball Challenge_, un jeu d'arcade addictif où votre agilité est mise à l'épreuve ! Évitez habilement les balles rebondissantes tout en collectant autant de pièces que possible. Affrontez vos propres records et défiez vos amis pour voir qui peut atteindre le plus haut score !
+<img src="res/crabe.png" /> <img src="res/cle.png" /> <img src="res/sortie.png" />
 
-# Caractéristiques
+Plongez dans l'excitation de l'aventure avec Fast Maze, un jeu captivant où votre reflection est honoré dans un petit labyrinthe ! Votre objectif est simple : récupérer la clé dans le labyrinthe et trouver le chemin vers la sortie.
 
-<img src="res/balle.png" /> <img src="res/crabe.png" />
+Chaque fois que vous lancez une nouvelle partie, le labyrinthe est généré de manière aléatoire, vous assurant une expérience unique à chaque fois.
 
-* Esquivez les balles : Utilisez votre réflexe et votre rapidité pour éviter les balles qui rebondissent sur les murs.
-* Collectez des pièces : Ramassez le plus de pièces pour accumuler des points.
-* Défiez-vous : Testez vos compétences en tentant d'obtenir le meilleur score possible dans ce jeu rapide et stimulant.
-* Graphismes rétro : Plongez dans une esthétique rétro avec des visuels charmants.
-* Facile à jouer, difficile à maîtriser : Accessible à tous, mais assez difficile pour défier même les joueurs les plus expérimentés.
+Avec des graphismes colorés et retro, Fast Maze est le jeu parfait pour les amateurs de défis rapides. Êtes-vous prêt à affronter le labyrinthe et à y échapper ?
 
 # Menu
 
 <img src="res/menu.png" style="zoom: 50%;"/>
 
-1. Changer la couleur de la balle (15 couleurs)
+1. Changer la couleur du contour des murs (15 couleurs)
 2. Changer le personnage (12 personnages)
 3. Changer la plateforme. Permet de désactiver l'affichage de la souris et de prendre en charge le tactile. 
 En mode PC, la croix directionnelle d'une manette est prise en compte.
 4. Bouton pour lancer une partie.
-5. La version du jeu. Les mises à jour ne seront que esthétiques (exemple : ajout de personnages)
+5. La version du jeu.
 
 # Partie
 
 <img src="res/partie.png" style="zoom: 50%;"/>
 
 1. Votre personnage (8x8 pixels).
-2. Une pièce qui doit être ramassée pour augmenter le score.
-3. La balle qu'il faut éviter. Attention, elles rebondissent aléatoirement sur les murs.
+2. La clé pour ouvrir la porte.
+3. La porte fermé. Ouverte après avoir récupéré la clé.
 4. Indication des touches à appuyer pour bouger votre personnage.
-5. Les informations de la partie. Cette zone indique le nombre de pièces ramassées et la durée (en secondes) de la partie.
+5. Les informations de la partie. Cette zone indique le nombre de déplacement que vous avez fait.
 6. Bouton pour retourner au menu.
 
 _Remarque :_
