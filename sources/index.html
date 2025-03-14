@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Maze</title>
+    <script src="https://cdn.jsdelivr.net/gh/kitao/pyxel/wasm/pyxel.js"></script>
+</head>
+<body>
+    <pyxel-run
+  script="
+# -*- coding: utf-8 -*-
+
+'''
+-> Fast Maze
+
+Studio : I.V.L Games (Innovation, Vision and Liberty Games)
+Auteur : AMEDRO Louis (alias Osiris Sio)
+
+licence CC BY SA
+''' 
+
+######################################################
+### Importation Module :
+######################################################
+
+import pyxel, random, time
+
+######################################################
+### Classe Graphe (non orienté avec des dictionnaires) :
+######################################################
+
+class Graphe_non_oriente_dic() :
+    '''
+    une classe pour un graphe non orienté avec une matrice adjacente
+    '''
+    def __init__(self):
+        '''
+        construit le graphe avec pour seul attribut un dictionnaire vide
+        '''
+        self.adj = {}
+
+    def ajouter_sommet(self, sommet):
+        '''
+        ajoute un nouveau sommet au graphe
+        : param sommet (???)
+        : pas de return, EFFET DE BORD sur self
+        '''
+        if sommet not in self.adj :
+            self.adj[sommet] = []
+            
+    def ajouter_arete(self, sommet1, sommet2) :
+        '''
+        on ajoute un sommet s'il n'y est pas dans le dictionnaire puis ajoute le sommet2
+        : param sommet1, sommet2 (???), deux sommets différents
+        : return (boolean)
+        '''
+        assert sommet1 != sommet2, 'Les deux sommets doivent être différents !'
+        self.ajouter_sommet(sommet1)
+        self.ajouter_sommet(sommet2)
+        if sommet2 not in self.adj[sommet1] :
+            self.adj[sommet1].append(sommet2)
+        if sommet1 not in self.adj[sommet2] :
+            self.adj[sommet2].append(sommet1)
+            
+    def a_arete(self, sommet1, sommet2) :
+        '''
+        renvoie True si il y a un arête de sommet1 vers sommet2 et False sinon
+        : param sommet1, sommet2 (???) deux sommets différents
+        : return (boolean)
+        >>> g = Graphe_non_oriente_dic()
+        >>> g.ajouter_sommet('A')
+        >>> g.ajouter_arete('B', 'C')
+        >>> g.a_arete('B', 'C')
+        True
+        >>> g.a_arete('A', 'B')
+        False
+        '''
+        assert sommet1 in self.adj, 'ce sommet n\'existe pas dans le dictionnaire adj !'
+        return sommet2 in self.adj[sommet1]
+            
+    def voisins(self, sommet):
+        '''
+        renvoie un tableau des voisins du sommet
+        : param sommet (int) entre 0 et  n - 1
+        : return (list)
+        '''
+        assert sommet in self.adj, 'ce sommet n\'existe pas dans le dictionnaire adj !'
+        return self.adj[sommet]
+
+######################################################
+### Classe Maillon :
+######################################################
+
+class Maillon :
+    '''
+    Une classe pour un maillon.
+    '''
+    
+    def __init__(self, valeur = None, suivant = None):
+        '''
+        Initialise un maillon avec les attributs :
+            -> valeur (type inconnu), la valeur du maillon
+            -> suivant (Maillon), pointe vers son Maillon suivant (None si le Maillon suivant est vide).
+        : params
+            valeur (type inconnu)
+            suivant (Maillon)
+        '''
+        self.valeur = valeur
+        self.suivant = suivant
+    
+    def acc_valeur(self):
+        '''
+        Accesseur de l'attribut valeur.
+        : return (type inconnu), valeur
+        '''
+        return self.valeur
+    
+    def acc_suivant(self):
+        '''
+        Accesseur de l'attribut suivant.
+        : return (Maillon)
+        '''
+        return self.suivant
+    
+    def mut_valeur(self, nouvelle_valeur):
+        '''
+        Modifie l'attribut valeur.
+        : param nouvelle_valeur (type inconnu)
+        '''
+        self.valeur = nouvelle_valeur
+        
+    def mut_suivant(self, maillon):
+        '''
+        Modifie l'attribut suivant.
+        : param maillon (Maillon)
+        '''
+        self.suivant = maillon
+        
+    def est_vide(self) :
+        '''
+        Renvoie True si le maillon est vide, False sinon
+        '''
+        return self.valeur == None #Renvoie la réponse de la condition (True/False)
+
+######################################################
+### Classe Pile :
+######################################################
+
+class Pile() :
+    '''
+    Une classe pour implémenter une pile.
+    '''
+    def __init__(self):
+        '''
+        Initialise une pile vide avec l'attribut sommet (Maillon)
+        qui est le sommet de la pile (par défaut, il n'y a pas de sommet).
+        : pas de return, on initialise.
+        '''
+        self.sommet = None
+
+    def est_vide(self):
+        '''
+        Renvoie True si la pile est vide et False sinon.
+        : return (boolean)
+        
+        >>> p = Pile()
+        >>> p.est_vide()
+        True
+        >>> p.empiler(1)
+        >>> p.est_vide()
+        False
+        '''
+        return self.sommet == None
+
+    def empiler(self, valeur):
+        '''
+        Ajoute la valeur passé en paramètre au sommet de la pile.
+        : param valeur (type inconnu)
+        : pas de return
+        '''
+        self.sommet = Maillon(valeur, self.sommet)
+
+    def depiler(self):
+        '''
+        Enlève si possible la valeur au sommet de pile et la renvoie ou déclenche un message d'erreur si la pile est vide.
+        : return (type inconnu)
+        
+        >>> p = Pile()
+        >>> p.empiler(1)
+        >>> p.empiler(2)
+        >>> p.empiler('a')
+        >>> p.depiler()
+        'a'
+        >>> p.depiler()
+        2
+        '''
+        #Précondition :
+        assert not self.est_vide(),'La pile est vide !'
+        #Code :
+        valeur = self.sommet.acc_valeur()
+        self.sommet = self.sommet.acc_suivant()
+        return valeur
+
+######################################################
+### Classe Labyrinthe :
+######################################################
+        
+class Labyrinthe() :
+    
+    ######################################################
+    ### Fonctions de Création :
+    ######################################################
+    
+    def modeliser_laby(largeur, hauteur) :
+        '''
+        renvoie un graphe non orienté modélisant un labyrinthe comportant largeur salles sur hauteurs salles
+        :param largeur, hauteur (int)
+        :return (Graphe_non_oriente_dic)
+        '''
+        graphe = Graphe_non_oriente_dic() #Créer un graphe non orienté avec un dictionnaire vide
+        y = 1 #La coordonnée y du sommet 
+        #Création de lignes (nombre de lignes -> hauteur)
+        for i in range(0, hauteur) :
+            x = 1 #La coordonnée x du sommet
+            #Création de sommet pour chaque ligne (nombre de sommet par ligne -> largeur)
+            for j in range(0, largeur) :
+                sommet = (x, y) #Premier sommet de coordonnées x et y
+                
+                if j  + 1 <= largeur - 1 :
+                    graphe.ajouter_arete(sommet, (x + 2, y)) #Ajoute une arete entre ce sommet et le sommet de coordonnées x + 2 et y
+                #Si on n'est pas dans la première ligne, alors on ajoute une arete entre le sommet de coordonnées x - 2 et y et le sommet de coordonnées x - 2 et y - 2               
+                if 0 <= i - 1 :
+                    graphe.ajouter_arete((x, y), (x, y - 2))
+                x += 2
+            y += 2
+        return graphe
+
+    def parcours_laby(graphe, sommet) :
+        '''
+        renvoie un tuple composé d'une liste de sommets correspondants 
+        à un parcours en profondeur du graphe et d'un dictionnaire parent 
+        permettant de savoir de qui sont voisins les voisins.
+        : param graphe (Graphe_non_oriente_dic)
+        : return tuple (liste de sommets, dictionnaires de parent)
+        '''
+        sommet_visites = []
+        p = Pile()
+        parent = {}
+        p.empiler(sommet)
+        parent[sommet] = None
+        while not p.est_vide() :
+            sommet = p.depiler()
+            #on ajoute le sommet au sommet visités
+            sommet_visites.append(sommet)
+            #voisins = les voisins du sommet dans le graphe mélanger
+            voisins = graphe.voisins(sommet)
+            random.shuffle(voisins)
+            #pour chaque voisin des voisins du sommet:
+            for voisin in voisins :
+                #s'il n'est pas dans parent:
+                if voisin not in parent:
+                    #le parent du voisin est le sommet
+                    parent[voisin] = sommet
+                    #on empile le voisin dans p
+                    p.empiler(voisin)
+        return (sommet_visites, parent)
+
+    def generer_tab(largeur, hauteur) :
+        '''
+        renvoie un tableau de tableaux représentant 
+        un labyrinthe de largeur salles sur hauteurs salles
+        :params
+            largeur (int)
+            hauteur (int)
+        :return (list)
+        '''
+        laby = [] # On crée un tableau labyrinthe
+        for lignes in range(hauteur * 2 + 1): # Pour les lignes correspondants à la hauteur multiplier par 2 plus 1 :
+            ligne_laby = [1] * (largeur * 2 + 1) # La largeur d'une ligne du laby est la largeur passé en paramètre multiplier par 2 plus 1.
+            laby.append(ligne_laby) # On ajoute la ligne au labyrinthe.
+        for i in range(hauteur * 2 + 1): # Pour l'indice i qui correspond à la hauteur multiplier par 2 plus 1 :
+            if i % 2 != 0: # Si l'indice est impair est pas égale à 0 :
+                for j in range(largeur * 2 + 1): # Pour l'indice i qui correspond à la hauteur multiplier par 2 plus 1 :
+                    if j % 2 != 0: # Si l'indice est impair est pas égale à 0 :
+                        laby[i][j] = 0  # Remplace l'élément d'indice j du tableau d'indice i par 0.
+        return laby # renvoie le labyrinthe en tableau
+        
+    def milieu(coord1, coord2):
+        '''
+        renvoie les coordonnées entières de la salle 
+        entre les salles de coordonnées précisées en paramètre
+        :params
+            coord1 (tuple)
+            coord2 (tuple)
+        :return (tuple)
+        '''
+        constat_coord = (coord2[0] - coord1[0], coord2[1] - coord1[1])
+        dic_constat_coord = {
+            (2, 0) : (coord2[0] - 1, coord2[1]),
+            (-2, 0) : (coord2[0] + 1, coord2[1]),
+            (0, 2) : (coord2[0], coord2[1] - 1),
+            (0, -2) : (coord2[0], coord2[1] + 1)
+        }
+        if constat_coord in dic_constat_coord :   
+            return dic_constat_coord[constat_coord]
+
+    def construire_tab_laby(largeur, hauteur) :
+        '''
+        renvoie le tableau de tableaux représentant 
+        un labyrinthe de largeur salles sur hauteurs 
+        salles, où les 1 représentent les murs et les 0 les salles.
+        :params
+            largeur (int)
+            hauteur (int)
+        :return (list)
+        '''
+        #Assertions :
+        assert isinstance(largeur, int), 'largeur doit être un entier (type int) !'
+        assert isinstance(hauteur, int), 'hauteur doit être un entier (type int) !'
+        #Code :
+        graphe_dic = Labyrinthe.modeliser_laby(largeur, hauteur) #construire le graphe qui modélise le labyrinthe.
+        parcours = Labyrinthe.parcours_laby(graphe_dic, (1, 1)) #obtenir le tableau du parcours en profondeur du graphe et le dictionnaire de parents des sommets.
+        tab = Labyrinthe.generer_tab(largeur, hauteur) #initialiser un tableau de tableaux représentant le labyrinthe non parcouru.
+        #ouvrir les murs du labyrinthe, en remplaçant les 0 par des 1 aux bons endroits dans le tableau de tableaux.
+        for i in range(len(parcours[0])) :
+            parent = parcours[1][parcours[0][i]]
+            if parent != None :
+                coordonnees = Labyrinthe.milieu(parcours[0][i], parent)
+                tab[coordonnees[1]][coordonnees[0]] = 0 #On va chercher dans tous les tableaux (hauteur) puis on remplace le 1 par un 0 dans le tableau correspondant (largeur)
+        return tab
+    
+    ######################################################
+    ### Fonction d'Emplacement Personnage/Sortie :
+    ######################################################
+    
+    def placer(self, largeur, hauteur, objet):
+        constat = False
+        while not constat :
+            coordonnees = (random.randint(0, largeur * 2), random.randint(0, hauteur * 2))
+            if self.laby[coordonnees[1]][coordonnees[0]] == 0:
+                if objet == 'joueur' :   
+                    constat = True
+                elif objet == 'sortie' and coordonnees != self.position_joueur:
+                    constat = True
+                elif objet == 'cle' and coordonnees != self.position_joueur and coordonnees != self.position_sortie :
+                    constat = True
+        return coordonnees
+        
+    ######################################################
+    ### Initialisation :
+    ######################################################
+    
+    def __init__(self, largeur, hauteur, apparence_joueur, apparence_murs):
+        self.laby = Labyrinthe.construire_tab_laby(largeur, hauteur)
+        self.apparence_joueur = apparence_joueur
+        self.apparence_murs = apparence_murs
+        
+        #Positions :
+        self.position_joueur = self.placer(largeur, hauteur, 'joueur')
+        self.position_sortie = self.placer(largeur, hauteur, 'sortie')
+        self.position_cle = self.placer(largeur, hauteur, 'cle')
+        
+        #Cle récupéré ?
+        self.cle_recupere = False
+    
+    ##############################################################################
+    ### Mutateurs :
+    ##############################################################################
+    
+    def mut_laby(self, x, y, carac) :
+        '''
+        Modifie le labyrinthe en écrivant le caractère carac passé en paramètre aux 
+        coordonnées x, y passé également en paramètre.
+        : params
+            x (int)
+            y (int)
+            carac (???)
+        : pas de return, modifie l'attribut lab
+        '''
+        self.laby[y][x] = carac #Change à la liste d'indice y et d'élément d'indice x le caractère passé en paramètre.
+        
+    ##############################################################################
+    ### Méthodes :
+    ##############################################################################
+    
+    def future_position(self, direction):
+        '''
+        Renvoie les coordonnées de la prochaine position du joueur.
+        S'il se déplaçait dans la direction passé en paramètre.
+        : param direction (str), 'z' ou 'q' ou 's' ou 'd'
+        : return (tuple)
+        '''
+        directions = { 'z' : (0, -1), #en haut
+                       's' : (0, 1),  #en bas
+                       'd' : (1, 0),  #à droite
+                       'q' : (-1, 0)  #gauche
+                     }
+        return (directions[direction][0] + self.position_joueur[0], directions[direction][1] + self.position_joueur[1]) #Renvoie, si on admet la direction, la nouvelle position du joueur en fonction de la direction passé en paramètre en ajoutant la valeur de x et de y pas la valeur du x et du y du dictionnaire de direction. 
+ 
+    def est_possible(self, direction):
+        '''
+        Renvoie True si le déplacement dans la direction est possible (c'est à dire s'il n'y a pas de mur à la prochaine position/coordonnées du joueur),
+        False sinon.
+        : param direction (str), 'z' ou 'q' ou 's' ou 'd'
+        : return (boolean)
+        '''
+        future_position = self.future_position(direction) # On créé une variable future_position qui est égal à la méthode future_position.
+        return self.laby[future_position[1]][future_position[0]] != 1 # Renvoie le contenu de la case pour la future position.
+        
+    def deplacer(self, direction):
+        '''
+        Modifie les coordonnées du joueur 'X' dans la direction souhaitée si possible.
+        : param direction (str), 'z' ou 'q' ou 's' ou 'd'
+        : return 0 ou 1 pour ajouter au nombre de déplacements
+        '''
+        if self.est_possible(direction) : #Si le déplacement vers la direction passé en paramètre est possible, alors :
+            self.position_joueur = self.future_position(direction) #Change la position du joueur en sa nouvelle position dans la direction souhaité.
+            return 1
+        return 0 
+        
+    def est_recupere_cle(self):
+        self.cle_recupere = self.position_joueur == self.position_cle
+        if self.cle_recupere :
+            pyxel.play(0, 1)
+        return self.cle_recupere
+          
+    def est_gagne(self) :
+        '''
+        Renvoie True si la partie est finie, False sinon.
+        : return (boolean)
+        '''
+        if not self.cle_recupere :
+            self.est_recupere_cle()
+        return self.cle_recupere and self.position_joueur == self.position_sortie # Renvoie True si la position du joueur est égal à la position de la sortie. 
+
+    ##############################################################################
+    ### Affichages :
+    ##############################################################################
+        
+    def afficher(self) :
+        for y in range(len(self.laby)) :
+            for x in range(len(self.laby[y])) :
+                if self.laby[y][x] == 1 :
+                    pyxel.rect(x * 8, y * 8, 8, 8, 13)
+                    pyxel.rectb(x * 8, y * 8, 8, 8, self.apparence_murs)
+        
+        ###Sortie/Cle :
+        pyxel.blt(self.position_sortie[0] * 8, self.position_sortie[1] * 8, 1, 8, 0, 8, 8, 0)
+        if not self.cle_recupere :
+            pyxel.blt(self.position_sortie[0] * 8, self.position_sortie[1] * 8, 1, 16, 0, 8, 8, 0)
+            pyxel.blt(self.position_cle[0] * 8, self.position_cle[1] * 8, 1, 8, 8, 8, 8, 0)            
+        
+        ###Joueur :
+        pyxel.blt(self.position_joueur[0] * 8, self.position_joueur[1] * 8, 1, 0, 8 * self.apparence_joueur, 8, 8, 0)
+        
+######################################################
+### Classe Jeu :
+######################################################
+
+class Jeu() :
+    
+    
+    def __init__(self) :
+        
+        #Intro :
+        self.intro = True
+        self.temps_commence_intro = time.time()
+        
+        #Menu :
+        self.menu = False
+        self.clavier = True
+        
+        #Partie :
+        self.apparence_murs = 9
+        self.apparence_joueur = 0
+        
+        #Partie :
+        self.nombre_deplacements = 0
+        self.fin_partie = False
+        
+        #Initialisation de la fenêtre Pyxel: 200 92
+        pyxel.init(264, 120, title='Fast Maze', fps=60, capture_scale=3, capture_sec=0)
+        pyxel.mouse(True)
+        pyxel.load('ressources.pyxres')
+        pyxel.playm(0)
+        pyxel.run(self.calculs, self.affichages)
+    
+    ######################################################
+    ### Calculs :
+    ######################################################
+    
+    ###Intro :
+    
+    def finir_intro(self):
+        if time.time() - self.temps_commence_intro >= 2 :
+            self.intro = False
+            self.menu = True
+    
+    ###Boutons :
+    
+    def boutons_menu(self):
+        if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) :
+            
+            #Jouer :
+            if 108 <= pyxel.mouse_x <= 156 and 90 <= pyxel.mouse_y <= 106:
+                self.menu = False
+                self.labyrinthe = Labyrinthe(16, 5, self.apparence_joueur, self.apparence_murs)
+            
+            #Plateforme :
+            elif 243 <= pyxel.mouse_x <= 259 and 5 <= pyxel.mouse_y <= 21 :
+                self.clavier = not self.clavier
+                pyxel.mouse(self.clavier)
+                
+            ###Zone Flèches :    
+            elif 65 <= pyxel.mouse_y <= 73 :   
+                
+                ###Murs :
+                #Gauche :
+                if 56 <= pyxel.mouse_x <= 64 and 1 < self.apparence_murs :
+                    self.apparence_murs -= 1
+                
+                #Droite :
+                elif 72 <= pyxel.mouse_x <= 80 and self.apparence_murs < 15 :
+                    self.apparence_murs += 1
+               
+                ###Personnage :                        
+                #Gauche :
+                elif 192 <= pyxel.mouse_x <= 200 and 0 < self.apparence_joueur :
+                    self.apparence_joueur -= 1
+                    
+                #Droite :
+                elif 208 <= pyxel.mouse_x <= 216 and self.apparence_joueur < 11 :
+                    self.apparence_joueur += 1
+    
+    def bouton_retour(self):
+        if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) :
+            if 10 <= pyxel.mouse_x <= 58 and 97 <= pyxel.mouse_y <= 113 :
+                self.menu = True
+                self.fin_partie = False
+                self.nombre_deplacements = 0
+                    
+    ###Contrôles :
+                    
+    def controle_clavier_manette(self):
+        if (pyxel.btnr(pyxel.KEY_Q) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT)):
+            self.nombre_deplacements += self.labyrinthe.deplacer('q')
+        if (pyxel.btnr(pyxel.KEY_D) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT)):
+            self.nombre_deplacements += self.labyrinthe.deplacer('d')
+        if (pyxel.btnr(pyxel.KEY_Z) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_UP)):
+            self.nombre_deplacements += self.labyrinthe.deplacer('z')
+        if (pyxel.btnr(pyxel.KEY_S) or pyxel.btnr(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN)):
+            self.nombre_deplacements += self.labyrinthe.deplacer('s')
+        
+    def controle_tactile(self):
+        if pyxel.btnr(pyxel.MOUSE_BUTTON_LEFT) :
+            #Gauche :
+            if 200 <= pyxel.mouse_x <= 216 and 104 <= pyxel.mouse_y <= 120 :
+                self.nombre_deplacements += self.labyrinthe.deplacer('q')
+            #Droite :
+            if 232 <= pyxel.mouse_x <= 248 and 104 <= pyxel.mouse_y <= 120:
+                self.nombre_deplacements += self.labyrinthe.deplacer('d')
+            #Haut :
+            if 216 <= pyxel.mouse_x <= 232 and 88 <= pyxel.mouse_y <= 104:
+                self.nombre_deplacements += self.labyrinthe.deplacer('z')
+            #Bas :
+            if 216 <= pyxel.mouse_x <= 232 and 104 <= pyxel.mouse_y <= 120:
+                self.nombre_deplacements += self.labyrinthe.deplacer('s')
+    
+    def controle_personnage(self):
+        if self.clavier :
+            self.controle_clavier_manette()
+        else :
+            self.controle_tactile()
+    
+    ###Partie Terminée :
+    
+    def est_fini(self):
+        self.fin_partie = self.labyrinthe.est_gagne()
+        if self.fin_partie :
+            pyxel.play(0, 2)
+        return self.fin_partie
+    
+    ###Calculs :
+       
+    def calculs(self) :
+        
+        ### Intro :
+        if self.intro :
+            self.finir_intro()
+        
+        ### Menu :
+        elif self.menu :
+            self.boutons_menu()
+        
+        ### Partie :
+        else :
+            if not self.fin_partie and not self.est_fini() :
+                self.controle_personnage()
+            self.bouton_retour()
+            
+    ######################################################
+    ### Affichages :
+    ######################################################
+    
+    def afficher_intro(self) :
+        pyxel.blt(113, 51, 0, 0, 56, 32, 16)
+        pyxel.text(129, 68, 'Games', 7)
+    
+    def afficher_menu(self):
+        #Version :
+        pyxel.text(2, 113, '0.0.4', 7)
+        
+        #Titre :
+        pyxel.rect(113, 18, 39, 9, 9)
+        pyxel.rectb(113, 18, 39, 9, 7)
+        pyxel.text(115, 20, 'Fast Maze', 7)
+        
+        ###Boutons Murs :
+        pyxel.rect(64, 47, 8, 8, 13)
+        pyxel.rectb(64, 47, 8, 8, self.apparence_murs)
+        
+        #Gauche :
+        if 1 < self.apparence_murs :
+            pyxel.blt(56, 65, 0, 0, 48, 8, 8)
+        else :
+            pyxel.blt(56, 65, 0, 16, 48, 8, 8)
+        
+        #Droite :
+        if self.apparence_murs < 15 :
+            pyxel.blt(72, 65, 0, 8, 48, 8, 8)
+        else :
+            pyxel.blt(72, 65, 0, 24, 48, 8, 8)
+        
+        ###Boutons Personnage :
+        pyxel.blt(200, 47, 1, 0, 8 * self.apparence_joueur, 8, 8, 0)
+        
+        #Gauche :
+        if 0 < self.apparence_joueur :
+            pyxel.blt(192, 65, 0, 0, 48, 8, 8)
+        else :
+            pyxel.blt(192, 65, 0, 16, 48, 8, 8)
+        
+        #Droite :
+        if self.apparence_joueur < 11 :
+            pyxel.blt(208, 65, 0, 8, 48, 8, 8)
+        else :
+            pyxel.blt(208, 65, 0, 24, 48, 8, 8)
+        
+        #Boutons Jouer:
+        pyxel.blt(108, 90, 0, 0, 0, 48, 16)
+        
+        #Bouton Plateforme :
+        dic = {
+            True : 0,
+            False : 16
+        }
+        pyxel.blt(243, 5, 0, dic[self.clavier], 16, 16, 16)
+        
+    def afficher_partie(self):      
+        #Information :
+        pyxel.rect(0, 88, 264, 33, 13)
+        pyxel.rectb(0, 88, 264, 33, 7)
+        pyxel.text(95, 97, 'Nombre de\nDeplacements : ' + str(self.nombre_deplacements), 7)
+        
+        #Bouton Retour :
+        pyxel.blt(10, 97, 0, 0, 32, 48, 16)
+        
+        #Touche :
+        if self.clavier :
+            pyxel.blt(200, 88, 0, 0, 104, 48, 32, 0)
+        else :
+            pyxel.blt(200, 88, 0, 0, 72, 48, 32, 0)
+                
+    def afficher_fin(self):
+        pyxel.text(115, 30, 'Tu es\n Sorti !', 7)
+        
+    def affichages(self):
+        #Fond Noir :
+        pyxel.cls(0)
+        
+        if self.intro :
+            self.afficher_intro()
+        
+        ### Menu :
+        elif self.menu :
+            self.afficher_menu()
+        
+        ### Partie :
+        else :
+            self.afficher_partie()
+            if not self.fin_partie :
+                self.labyrinthe.afficher()
+            else :
+                self.afficher_fin()
+                
+Jeu() #Lancement du jeu automatiquement
+"
+></pyxel-run>
+</body>
+</html>
